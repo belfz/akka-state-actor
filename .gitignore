@@ -1,0 +1,14 @@
+### directories ###
+/.idea/
+/project/project/
+/project/target/
+/bootCounter.agent
+/conf.agent
+/config/envs\.*
+/config/nodes\.*
+/env/\.*
+target/
+
+### git ###
+*.orig
+
