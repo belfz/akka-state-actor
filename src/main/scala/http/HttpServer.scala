@@ -20,14 +20,19 @@ import scala.util.{Failure, Success}
 
 class HttpServer(stateActor: ActorRef)(implicit system: ActorSystem) extends JsonConverters {
 
-  implicit val executionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+//  implicit val executionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  implicit val executionContext = system.dispatcher
   implicit val materializer = ActorMaterializer()
   implicit val actorRequestTimeout = Timeout(1 second)
 
-  val routes = path("hi") {
+  val routes = pathPrefix("hello") {
     get {
-      complete {
-        "no elo"
+      pathEnd {
+        complete("no elo")
+      } ~
+      path(IntNumber) { num =>
+        println(num)
+        complete(HttpResponse(StatusCodes.OK))
       }
     }
   } ~
