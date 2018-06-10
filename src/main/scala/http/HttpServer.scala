@@ -9,12 +9,13 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import domain.Cat
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-class HttpServer(stateActor: StateActor)(implicit system: ActorSystem) {
+class HttpServer(stateActor: StateActor)(implicit system: ActorSystem) extends JsonConverters {
 
   implicit val executionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   implicit val materializer = ActorMaterializer()
@@ -27,10 +28,16 @@ class HttpServer(stateActor: StateActor)(implicit system: ActorSystem) {
       }
     }
   } ~
-  path("bye") {
+  path("cat") {
     get {
       complete {
-        "narka"
+        Cat("belfiak", 5)
+      }
+    } ~
+    post {
+      entity(as[Cat]) { cat =>
+        println(cat)
+        complete("ok")
       }
     }
   }
