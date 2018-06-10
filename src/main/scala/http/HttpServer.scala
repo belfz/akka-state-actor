@@ -3,9 +3,12 @@ package http
 import java.util.concurrent.Executors
 
 import actors.StateActor
-import akka.actor.ActorSystem
+import actors.StateActor.{AddCatRequest, GetCatsRequest}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
+import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
@@ -15,7 +18,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-class HttpServer(stateActor: StateActor)(implicit system: ActorSystem) extends JsonConverters {
+class HttpServer(stateActor: ActorRef)(implicit system: ActorSystem) extends JsonConverters {
 
   implicit val executionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   implicit val materializer = ActorMaterializer()
@@ -28,16 +31,21 @@ class HttpServer(stateActor: StateActor)(implicit system: ActorSystem) extends J
       }
     }
   } ~
-  path("cat") {
+  path("cats") {
     get {
-      complete {
-        Cat("belfiak", 5)
+      val catsFuture = (stateActor ? GetCatsRequest).mapTo[List[Cat]]
+      onComplete(catsFuture) {
+        case Success(listOfCats) => complete(listOfCats)
+        case Failure(e) => complete(HttpResponse(StatusCodes.InternalServerError, entity = "cannot fetch cats"))
       }
     } ~
     post {
       entity(as[Cat]) { cat =>
-        println(cat)
-        complete("ok")
+        val addResultFuture = stateActor ? AddCatRequest(cat)
+        onComplete(addResultFuture) {
+          case Success(_) => complete(HttpResponse(StatusCodes.OK))
+          case Failure(e) => complete(HttpResponse(StatusCodes.InternalServerError, entity = e.getCause.getMessage))
+        }
       }
     }
   }
