@@ -1,8 +1,5 @@
 package http
 
-import java.util.concurrent.Executors
-
-import actors.StateActor
 import actors.StateActor.{AddCatRequest, GetCatsRequest}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
@@ -15,12 +12,10 @@ import com.typesafe.config.ConfigFactory
 import domain.Cat
 
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 class HttpServer(stateActor: ActorRef)(implicit system: ActorSystem) extends JsonConverters {
 
-//  implicit val executionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   implicit val executionContext = system.dispatcher
   implicit val materializer = ActorMaterializer()
   implicit val actorRequestTimeout = Timeout(1 second)
@@ -49,7 +44,7 @@ class HttpServer(stateActor: ActorRef)(implicit system: ActorSystem) extends Jso
         val addResultFuture = stateActor ? AddCatRequest(cat)
         onComplete(addResultFuture) {
           case Success(_) => complete(HttpResponse(StatusCodes.OK))
-          case Failure(e) => complete(HttpResponse(StatusCodes.InternalServerError, entity = e.getCause.getMessage))
+          case Failure(e) => complete(HttpResponse(StatusCodes.Conflict, entity = e.getCause.getMessage))
         }
       }
     }
