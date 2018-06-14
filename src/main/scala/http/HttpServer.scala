@@ -1,7 +1,7 @@
 package http
 
 import actors.StateActor.{AddCatRequest, GetCatsRequest}
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
@@ -26,7 +26,6 @@ class HttpServer(stateActor: ActorRef)(implicit system: ActorSystem) extends Jso
         complete("no elo")
       } ~
       path(IntNumber) { num =>
-        println(num)
         complete(HttpResponse(StatusCodes.OK))
       }
     }

@@ -1,6 +1,6 @@
 package actors
 
-import actors.StateActor.{AddCatRequest, GetCatsRequest}
+import actors.StateActor.{AddCatRequest, CatExistsError, GetCatsRequest}
 import akka.actor.{Actor, Status}
 import domain.Cat
 
@@ -15,10 +15,10 @@ class StateActor(initialCats: List[Cat]) extends Actor {
 
     case AddCatRequest(cat) => {
       if (cats.contains(cat)) {
-        sender() ! Status.Failure(new Error("cat already exists!"))
+        sender() ! Status.Failure(CatExistsError(cat))
       } else {
         cats += cat
-        sender() ! ()
+        sender() ! Status.Success
       }
     }
   }
@@ -28,4 +28,6 @@ object StateActor {
   case object GetCatsRequest
 
   case class AddCatRequest(cat: Cat)
+
+  case class CatExistsError(cat: Cat) extends Error(s"$cat already exists")
 }
