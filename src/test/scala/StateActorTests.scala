@@ -5,16 +5,20 @@ import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import domain.Cat
-import org.scalatest.FunSpecLike
+import org.scalatest.{BeforeAndAfterAll, FunSpecLike}
 import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 import scala.util.Success
 
-class StateActorTests extends TestKit(ActorSystem("stateTests")) with ImplicitSender with FunSpecLike with ScalaFutures {
+class StateActorTests extends TestKit(ActorSystem("stateTests")) with ImplicitSender with FunSpecLike with BeforeAndAfterAll with ScalaFutures {
   implicit val timeout = Timeout(1 seconds)
   implicit val executionContext = system.dispatcher
   val initialCatsList = List(Cat("test_cat", 3))
+
+  override def afterAll = {
+    TestKit.shutdownActorSystem(system)
+  }
 
   it("should return a list of available cats on GetCatsRequest") {
     val stateActor = system.actorOf(Props(new StateActor(initialCatsList)))
